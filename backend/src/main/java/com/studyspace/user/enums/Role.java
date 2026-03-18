@@ -1,4 +1,7 @@
 package com.studyspace.user.enums;
 
-public class Role {
+public enum Role {
+    CUSTOMER,
+    STAFF,
+    ADMIN
 }
