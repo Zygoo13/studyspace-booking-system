@@ -1,0 +1,74 @@
+######################
+# Java / Spring Boot
+######################
+target/
+*.class
+*.war
+*.ear
+*.log
+
+######################
+# Maven Wrapper
+######################
+# Keep Maven wrapper files committed
+# Do not ignore .mvn/
+
+######################
+# IntelliJ IDEA
+######################
+.idea/
+*.iws
+*.iml
+*.ipr
+
+######################
+# VS Code
+######################
+.vscode/
+
+######################
+# OS files
+######################
+.DS_Store
+Thumbs.db
+
+######################
+# Node / Frontend
+######################
+node_modules/
+dist/
+build/
+coverage/
+
+######################
+# Env files
+######################
+.env
+.env.*
+!.env.example
+
+######################
+# Logs
+######################
+logs/
+
+######################
+# Database local dump / backup
+######################
+dump-*.sql
+backup-*.sql
+*.sqlite
+
+######################
+# Docker local data
+######################
+docker-data/
+
+######################
+# Temp files
+######################
+*.swp
+*.swo
+*~
+.cache/
+.tmp/
