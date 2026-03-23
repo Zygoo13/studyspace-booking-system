@@ -13,5 +13,6 @@ public interface UserMapper {
     UserResponse toResponse(User user);
 
     @Mapping(target = "role", expression = "java(user.getRole() != null ? user.getRole().name() : null)")
+    @Mapping(target = "active", source = "isActive")
     AuthUserResponse toAuthUserResponse(User user);
 }

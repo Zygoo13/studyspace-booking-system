@@ -1,43 +1,49 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-export default function HomePage() {
-    const { user, isAuthenticated, logout } = useAuth()
+export default function MePage() {
+    const { user, refreshMe, logout } = useAuth()
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    useEffect(() => {
+        if (!user) {
+            void handleRefresh()
+        }
+    }, [])
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true)
+        try {
+            await refreshMe()
+        } finally {
+            setIsRefreshing(false)
+        }
+    }
 
     return (
         <div style={styles.page}>
             <div style={styles.card}>
-                <h1>StudySpace Frontend</h1>
-                <p>Auth frontend tối thiểu đã sẵn sàng.</p>
+                <h1>Current User</h1>
 
-                <div style={styles.section}>
-                    <strong>Trạng thái:</strong>{' '}
-                    {isAuthenticated ? 'Đã đăng nhập' : 'Chưa đăng nhập'}
-                </div>
-
-                <div style={styles.section}>
-                    <strong>User:</strong> {user ? `${user.fullName} (${user.role})` : 'N/A'}
+                <div style={styles.box}>
+                    <pre style={styles.pre}>
+                        {JSON.stringify(user, null, 2)}
+                    </pre>
                 </div>
 
                 <div style={styles.actions}>
-                    <Link to="/login" style={styles.linkButton}>
-                        Login
-                    </Link>
-                    <Link to="/me" style={styles.linkButton}>
-                        Me Page
-                    </Link>
-                    <Link to="/test/authenticated" style={styles.linkButton}>
-                        Test Authenticated
-                    </Link>
-                    <Link to="/test/staff" style={styles.linkButton}>
-                        Test Staff
-                    </Link>
-                    <Link to="/test/admin" style={styles.linkButton}>
-                        Test Admin
-                    </Link>
+                    <button onClick={() => void handleRefresh()} style={styles.button}>
+                        {isRefreshing ? 'Refreshing...' : 'Refresh /me'}
+                    </button>
+
                     <button onClick={() => void logout()} style={styles.button}>
                         Logout
                     </button>
+
+                    <Link to="/" style={styles.linkButton}>
+                        Home
+                    </Link>
                 </div>
             </div>
         </div>
@@ -61,8 +67,16 @@ const styles: Record<string, React.CSSProperties> = {
         borderRadius: 12,
         boxShadow: '0 10px 30px rgba(0,0,0,0.08)'
     },
-    section: {
-        marginTop: 12
+    box: {
+        marginTop: 16,
+        padding: 16,
+        borderRadius: 8,
+        background: '#0f172a',
+        color: '#e2e8f0',
+        overflowX: 'auto'
+    },
+    pre: {
+        margin: 0
     },
     actions: {
         display: 'flex',
