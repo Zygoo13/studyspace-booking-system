@@ -1,21 +1,29 @@
-import { useEffect, useState } from 'react'
+import { ReloadOutlined } from '@ant-design/icons'
+import { Button, Card, Popconfirm, Space, Switch, Table, Tag, Typography, message } from 'antd'
+import type { ColumnsType } from 'antd/es/table'
+import { useEffect, useMemo, useState } from 'react'
+import { useAuth } from '../context/AuthContext'
 import { userService } from '../features/users/services/userService'
 import type { UserSummary } from '../features/users/types/user'
 
+const { Title, Paragraph, Text } = Typography
+
 export default function AdminUsersPage() {
+    const { user: currentUser } = useAuth()
     const [users, setUsers] = useState<UserSummary[]>([])
     const [isLoading, setIsLoading] = useState(true)
-    const [error, setError] = useState('')
+    const [updatingUserId, setUpdatingUserId] = useState<number | null>(null)
+    const [messageApi, contextHolder] = message.useMessage()
 
     const loadUsers = async () => {
         setIsLoading(true)
-        setError('')
 
         try {
             const data = await userService.getUsers()
             setUsers(data)
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Load users failed')
+            const errorMessage = err instanceof Error ? err.message : 'Load users failed'
+            await messageApi.error(errorMessage)
         } finally {
             setIsLoading(false)
         }
@@ -25,131 +33,146 @@ export default function AdminUsersPage() {
         void loadUsers()
     }, [])
 
-    const handleToggleStatus = async (user: UserSummary) => {
+    const handleToggleStatus = async (targetUser: UserSummary) => {
+        if (currentUser?.id === targetUser.id) {
+            await messageApi.warning('You cannot deactivate your own current account here')
+            return
+        }
+
+        setUpdatingUserId(targetUser.id)
+
         try {
-            const updated = await userService.updateUserStatus(user.id, !user.active)
+            const updated = await userService.updateUserStatus(targetUser.id, !targetUser.active)
 
             setUsers((prev) =>
                 prev.map((item) =>
                     item.id === updated.id ? { ...item, active: updated.active } : item,
                 ),
             )
+
+            await messageApi.success('Updated user status successfully')
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Update status failed')
+            const errorMessage = err instanceof Error ? err.message : 'Update status failed'
+            await messageApi.error(errorMessage)
+        } finally {
+            setUpdatingUserId(null)
         }
     }
 
-    if (isLoading) {
-        return <div style={styles.info}>Loading users...</div>
-    }
+    const columns: ColumnsType<UserSummary> = useMemo(
+        () => [
+            {
+                title: 'ID',
+                dataIndex: 'id',
+                key: 'id',
+                width: 80,
+            },
+            {
+                title: 'Full Name',
+                dataIndex: 'fullName',
+                key: 'fullName',
+            },
+            {
+                title: 'Email',
+                dataIndex: 'email',
+                key: 'email',
+            },
+            {
+                title: 'Phone',
+                dataIndex: 'phone',
+                key: 'phone',
+            },
+            {
+                title: 'Role',
+                dataIndex: 'role',
+                key: 'role',
+                render: (role: string) => (
+                    <Tag color={role === 'ADMIN' ? 'red' : role === 'STAFF' ? 'blue' : 'default'}>
+                        {role}
+                    </Tag>
+                ),
+            },
+            {
+                title: 'Status',
+                dataIndex: 'active',
+                key: 'active',
+                render: (active: boolean) =>
+                    active ? <Tag color="green">Active</Tag> : <Tag>Inactive</Tag>,
+            },
+            {
+                title: 'Action',
+                key: 'action',
+                width: 180,
+                render: (_, record) => {
+                    const isSelf = currentUser?.id === record.id
+
+                    return (
+                        <Space>
+                            <Popconfirm
+                                title={record.active ? 'Deactivate this user?' : 'Activate this user?'}
+                                description={
+                                    isSelf
+                                        ? 'You cannot change your own current account status here.'
+                                        : 'This action will update the user active flag.'
+                                }
+                                okText="Confirm"
+                                cancelText="Cancel"
+                                onConfirm={() => void handleToggleStatus(record)}
+                                disabled={isSelf}
+                            >
+                                <Switch
+                                    checked={record.active}
+                                    loading={updatingUserId === record.id}
+                                    disabled={isSelf}
+                                />
+                            </Popconfirm>
+
+                            {isSelf ? <Text type="secondary">Current user</Text> : null}
+                        </Space>
+                    )
+                },
+            },
+        ],
+        [currentUser?.id, updatingUserId],
+    )
 
     return (
-        <div style={styles.page}>
-            <div style={styles.header}>
-                <h1 style={styles.title}>Admin Users</h1>
-                <button onClick={() => void loadUsers()} style={styles.button}>
-                    Reload
-                </button>
-            </div>
+        <>
+            {contextHolder}
 
-            {error ? <div style={styles.error}>{error}</div> : null}
+            <div>
+                <div
+                    style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: 16,
+                    }}
+                >
+                    <div>
+                        <Title level={2} style={{ margin: 0 }}>
+                            Admin Users
+                        </Title>
+                        <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                            Quản lý user cơ bản cho Phase 1 foundation.
+                        </Paragraph>
+                    </div>
 
-            <div style={styles.tableWrap}>
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>ID</th>
-                            <th style={styles.th}>Full Name</th>
-                            <th style={styles.th}>Email</th>
-                            <th style={styles.th}>Phone</th>
-                            <th style={styles.th}>Role</th>
-                            <th style={styles.th}>Active</th>
-                            <th style={styles.th}>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {users.map((user) => (
-                            <tr key={user.id}>
-                                <td style={styles.td}>{user.id}</td>
-                                <td style={styles.td}>{user.fullName}</td>
-                                <td style={styles.td}>{user.email}</td>
-                                <td style={styles.td}>{user.phone}</td>
-                                <td style={styles.td}>{user.role}</td>
-                                <td style={styles.td}>{user.active ? 'Active' : 'Inactive'}</td>
-                                <td style={styles.td}>
-                                    <button
-                                        onClick={() => void handleToggleStatus(user)}
-                                        style={styles.actionButton}
-                                    >
-                                        {user.active ? 'Deactivate' : 'Activate'}
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
+                    <Button icon={<ReloadOutlined />} onClick={() => void loadUsers()} loading={isLoading}>
+                        Reload
+                    </Button>
+                </div>
+
+                <Card>
+                    <Table<UserSummary>
+                        rowKey="id"
+                        columns={columns}
+                        dataSource={users}
+                        loading={isLoading}
+                        pagination={{ pageSize: 8, showSizeChanger: false }}
+                    />
+                </Card>
             </div>
-        </div>
+        </>
     )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-    page: {
-        display: 'grid',
-        gap: 16,
-    },
-    header: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    title: {
-        margin: 0,
-    },
-    button: {
-        padding: '10px 14px',
-        border: 'none',
-        borderRadius: 8,
-        background: '#111827',
-        color: '#ffffff',
-        cursor: 'pointer',
-    },
-    info: {
-        padding: 16,
-        fontFamily: 'Arial, sans-serif',
-    },
-    error: {
-        padding: 12,
-        borderRadius: 8,
-        background: '#fef2f2',
-        color: '#b91c1c',
-    },
-    tableWrap: {
-        overflowX: 'auto',
-        background: '#ffffff',
-        borderRadius: 12,
-        border: '1px solid #e5e7eb',
-    },
-    table: {
-        width: '100%',
-        borderCollapse: 'collapse',
-    },
-    th: {
-        textAlign: 'left',
-        padding: 12,
-        borderBottom: '1px solid #e5e7eb',
-        background: '#f9fafb',
-    },
-    td: {
-        padding: 12,
-        borderBottom: '1px solid #f1f5f9',
-    },
-    actionButton: {
-        padding: '8px 12px',
-        border: 'none',
-        borderRadius: 8,
-        background: '#2563eb',
-        color: '#ffffff',
-        cursor: 'pointer',
-    },
 }

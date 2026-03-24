@@ -1,14 +1,16 @@
-import { useState, type FormEvent } from 'react'
+import { LockOutlined, MailOutlined } from '@ant-design/icons'
+import { Alert, Button, Card, Form, Input, Typography } from 'antd'
+import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+
+const { Title, Paragraph } = Typography
 
 export default function LoginPage() {
     const navigate = useNavigate()
     const location = useLocation()
     const { login, isAuthenticated } = useAuth()
 
-    const [email, setEmail] = useState('admin@studyspace.com')
-    const [password, setPassword] = useState('password')
     const [error, setError] = useState('')
     const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -18,15 +20,14 @@ export default function LoginPage() {
         return <Navigate to="/" replace />
     }
 
-    const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+    const handleFinish = async (values: { email: string; password: string }) => {
         setError('')
         setIsSubmitting(true)
 
         try {
-            await login(email.trim(), password)
+            await login(values.email.trim(), values.password)
             navigate(from, { replace: true })
-        } catch (err: unknown) {
+        } catch (err) {
             setError(err instanceof Error ? err.message : 'Login failed')
         } finally {
             setIsSubmitting(false)
@@ -34,101 +35,55 @@ export default function LoginPage() {
     }
 
     return (
-        <div style={styles.page}>
-            <div style={styles.card}>
-                <h1 style={styles.title}>StudySpace Login</h1>
-                <p style={styles.subtitle}>Login to access Phase 1 template</p>
+        <div
+            style={{
+                minHeight: '100vh',
+                display: 'grid',
+                placeItems: 'center',
+                background: '#f5f7fb',
+                padding: 16,
+            }}
+        >
+            <Card style={{ width: 420, borderRadius: 16 }}>
+                <Title level={2} style={{ marginBottom: 8 }}>
+                    StudySpace Login
+                </Title>
+                <Paragraph type="secondary">Login to access Phase 1 template</Paragraph>
 
-                <form onSubmit={handleSubmit} style={styles.form}>
-                    <div style={styles.field}>
-                        <label htmlFor="email">Email</label>
-                        <input
-                            id="email"
-                            type="email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            placeholder="Enter email"
-                            style={styles.input}
-                            required
-                        />
-                    </div>
+                {error ? <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} /> : null}
 
-                    <div style={styles.field}>
-                        <label htmlFor="password">Password</label>
-                        <input
-                            id="password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter password"
-                            style={styles.input}
-                            required
-                        />
-                    </div>
+                <Form
+                    layout="vertical"
+                    initialValues={{
+                        email: 'admin@studyspace.com',
+                        password: 'password',
+                    }}
+                    onFinish={(values) => void handleFinish(values)}
+                >
+                    <Form.Item
+                        label="Email"
+                        name="email"
+                        rules={[
+                            { required: true, message: 'Please enter email' },
+                            { type: 'email', message: 'Invalid email' },
+                        ]}
+                    >
+                        <Input prefix={<MailOutlined />} placeholder="Enter email" />
+                    </Form.Item>
 
-                    {error ? <div style={styles.error}>{error}</div> : null}
+                    <Form.Item
+                        label="Password"
+                        name="password"
+                        rules={[{ required: true, message: 'Please enter password' }]}
+                    >
+                        <Input.Password prefix={<LockOutlined />} placeholder="Enter password" />
+                    </Form.Item>
 
-                    <button type="submit" style={styles.button} disabled={isSubmitting}>
-                        {isSubmitting ? 'Signing in...' : 'Login'}
-                    </button>
-                </form>
-            </div>
+                    <Button type="primary" htmlType="submit" loading={isSubmitting} block>
+                        Login
+                    </Button>
+                </Form>
+            </Card>
         </div>
     )
-}
-
-const styles: Record<string, React.CSSProperties> = {
-    page: {
-        minHeight: '100vh',
-        display: 'grid',
-        placeItems: 'center',
-        background: '#f5f7fb',
-        padding: 16,
-        fontFamily: 'Arial, sans-serif',
-    },
-    card: {
-        width: '100%',
-        maxWidth: 420,
-        background: '#fff',
-        padding: 24,
-        borderRadius: 12,
-        boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
-    },
-    title: {
-        margin: '0 0 8px',
-    },
-    subtitle: {
-        margin: '0 0 20px',
-        color: '#666',
-    },
-    form: {
-        display: 'grid',
-        gap: 16,
-    },
-    field: {
-        display: 'grid',
-        gap: 8,
-    },
-    input: {
-        padding: '12px 14px',
-        border: '1px solid #d0d7de',
-        borderRadius: 8,
-        fontSize: 14,
-    },
-    button: {
-        padding: '12px 14px',
-        border: 'none',
-        borderRadius: 8,
-        background: '#111827',
-        color: '#fff',
-        cursor: 'pointer',
-        fontSize: 14,
-    },
-    error: {
-        padding: 12,
-        borderRadius: 8,
-        background: '#fef2f2',
-        color: '#b91c1c',
-        fontSize: 14,
-    },
 }

@@ -1,111 +1,97 @@
-import { Link, Outlet, useLocation } from 'react-router-dom'
+import { DashboardOutlined, LogoutOutlined, TeamOutlined, UserOutlined } from '@ant-design/icons'
+import { Button, Layout, Menu, Space, Typography } from 'antd'
+import type { MenuProps } from 'antd'
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+
+const { Sider, Content } = Layout
+const { Title, Text } = Typography
 
 export default function AppLayout() {
     const { user, logout } = useAuth()
     const location = useLocation()
+    const navigate = useNavigate()
+
+    const selectedKey = location.pathname.startsWith('/admin/users')
+        ? '/admin/users'
+        : location.pathname === '/profile'
+            ? '/profile'
+            : '/'
+
+    const items: MenuProps['items'] = [
+        {
+            key: '/',
+            icon: <DashboardOutlined />,
+            label: <Link to="/">Dashboard</Link>,
+        },
+        {
+            key: '/profile',
+            icon: <UserOutlined />,
+            label: <Link to="/profile">Profile</Link>,
+        },
+        ...(user?.role === 'ADMIN'
+            ? [
+                {
+                    key: '/admin/users',
+                    icon: <TeamOutlined />,
+                    label: <Link to="/admin/users">Users</Link>,
+                },
+            ]
+            : []),
+    ]
+
+    const handleLogout = async () => {
+        await logout()
+        navigate('/login', { replace: true })
+    }
 
     return (
-        <div style={styles.page}>
-            <aside style={styles.sidebar}>
-                <div style={styles.brand}>StudySpace</div>
+        <Layout style={{ minHeight: '100vh' }}>
+            <Sider
+                width={240}
+                theme="light"
+                style={{
+                    borderRight: '1px solid #f0f0f0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                }}
+            >
+                <div style={{ padding: 20 }}>
+                    <Title level={3} style={{ margin: 0 }}>
+                        StudySpace
+                    </Title>
+                    <Text type="secondary">Phase 1 Template</Text>
+                </div>
 
-                <nav style={styles.nav}>
-                    <Link style={linkStyle(location.pathname === '/')} to="/">
-                        Dashboard
-                    </Link>
+                <Menu mode="inline" selectedKeys={[selectedKey]} items={items} style={{ borderRight: 0 }} />
 
-                    <Link style={linkStyle(location.pathname === '/profile')} to="/profile">
-                        Profile
-                    </Link>
-
-                    {user?.role === 'ADMIN' ? (
-                        <Link style={linkStyle(location.pathname === '/admin/users')} to="/admin/users">
-                            Users
-                        </Link>
-                    ) : null}
-                </nav>
-
-                <div style={styles.footer}>
-                    <div style={styles.userBox}>
-                        <div style={styles.userName}>{user?.fullName}</div>
-                        <div style={styles.userRole}>{user?.role}</div>
+                <div style={{ marginTop: 'auto', padding: 16 }}>
+                    <div
+                        style={{
+                            padding: 12,
+                            borderRadius: 12,
+                            background: '#fafafa',
+                            border: '1px solid #f0f0f0',
+                            marginBottom: 12,
+                        }}
+                    >
+                        <Space direction="vertical" size={0}>
+                            <Text strong>{user?.fullName}</Text>
+                            <Text type="secondary">{user?.role}</Text>
+                        </Space>
                     </div>
 
-                    <button onClick={() => void logout()} style={styles.logoutButton}>
+                    <Button block icon={<LogoutOutlined />} onClick={() => void handleLogout()}>
                         Logout
-                    </button>
+                    </Button>
                 </div>
-            </aside>
+            </Sider>
 
-            <main style={styles.main}>
-                <Outlet />
-            </main>
-        </div>
+            <Layout>
+                <Content style={{ padding: 24, background: '#f5f7fb' }}>
+                    <Outlet />
+                </Content>
+            </Layout>
+        </Layout>
     )
-}
-
-function linkStyle(active: boolean): React.CSSProperties {
-    return {
-        display: 'block',
-        padding: '10px 12px',
-        borderRadius: 8,
-        textDecoration: 'none',
-        color: active ? '#ffffff' : '#111827',
-        background: active ? '#111827' : 'transparent',
-    }
-}
-
-const styles: Record<string, React.CSSProperties> = {
-    page: {
-        minHeight: '100vh',
-        display: 'grid',
-        gridTemplateColumns: '240px 1fr',
-        background: '#f8fafc',
-        fontFamily: 'Arial, sans-serif',
-    },
-    sidebar: {
-        padding: 20,
-        background: '#ffffff',
-        borderRight: '1px solid #e5e7eb',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 20,
-    },
-    brand: {
-        fontSize: 20,
-        fontWeight: 700,
-    },
-    nav: {
-        display: 'grid',
-        gap: 8,
-    },
-    footer: {
-        marginTop: 'auto',
-        display: 'grid',
-        gap: 12,
-    },
-    userBox: {
-        padding: 12,
-        borderRadius: 8,
-        background: '#f3f4f6',
-    },
-    userName: {
-        fontWeight: 600,
-    },
-    userRole: {
-        fontSize: 13,
-        color: '#6b7280',
-    },
-    logoutButton: {
-        padding: '10px 12px',
-        border: 'none',
-        borderRadius: 8,
-        background: '#111827',
-        color: '#ffffff',
-        cursor: 'pointer',
-    },
-    main: {
-        padding: 24,
-    },
 }
