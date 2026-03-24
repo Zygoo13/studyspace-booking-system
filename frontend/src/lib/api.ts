@@ -6,8 +6,8 @@ const baseURL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 export const api = axios.create({
     baseURL,
     headers: {
-        'Content-Type': 'application/json'
-    }
+        'Content-Type': 'application/json',
+    },
 })
 
 let isRefreshing = false
@@ -37,14 +37,15 @@ api.interceptors.response.use(
             return Promise.reject(error)
         }
 
-        const isRefreshRequest = originalRequest.url?.includes('/api/auth/refresh')
         const isUnauthorized = error.response.status === 401
+        const isRefreshRequest = originalRequest.url?.includes('/api/auth/refresh')
 
         if (!isUnauthorized || isRefreshRequest || originalRequest._retry) {
             return Promise.reject(error)
         }
 
         const refreshToken = tokenStorage.getRefreshToken()
+
         if (!refreshToken) {
             tokenStorage.clear()
             return Promise.reject(error)
@@ -69,7 +70,7 @@ api.interceptors.response.use(
 
         try {
             const refreshResponse = await axios.post(`${baseURL}/api/auth/refresh`, {
-                refreshToken
+                refreshToken,
             })
 
             const responseData = refreshResponse.data?.data
@@ -92,5 +93,5 @@ api.interceptors.response.use(
         } finally {
             isRefreshing = false
         }
-    }
+    },
 )

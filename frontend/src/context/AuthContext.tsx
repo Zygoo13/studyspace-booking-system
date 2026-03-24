@@ -5,9 +5,9 @@ import {
     useEffect,
     useMemo,
     useState,
-    type ReactNode
+    type ReactNode,
 } from 'react'
-import { authService } from '../features/auth/services/authService'
+import { authService } from '../features/auth/services/authService.ts'
 import type { AuthUser } from '../features/auth/types/auth'
 import { tokenStorage } from '../lib/token'
 
@@ -37,11 +37,13 @@ export function AuthProvider({ children }: Props) {
         } catch {
             tokenStorage.clear()
             setUser(null)
+            throw new Error('Unable to refresh current user')
         }
     }, [])
 
     const bootstrapAuth = useCallback(async () => {
         const accessToken = tokenStorage.getAccessToken()
+
         if (!accessToken) {
             setUser(null)
             setIsLoading(false)
@@ -79,7 +81,7 @@ export function AuthProvider({ children }: Props) {
                 await authService.logout(refreshToken)
             }
         } catch {
-            // ignore logout API error, still clear local auth
+            // ignore API error on logout
         } finally {
             tokenStorage.clear()
             setUser(null)
@@ -93,9 +95,9 @@ export function AuthProvider({ children }: Props) {
             isLoading,
             login,
             logout,
-            refreshMe
+            refreshMe,
         }),
-        [user, isLoading, login, logout, refreshMe]
+        [user, isLoading, login, logout, refreshMe],
     )
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

@@ -2,25 +2,29 @@ import type {
     AuthTokenResponse,
     AuthUser,
     LoginRequest,
-    RefreshTokenRequest
+    RefreshTokenRequest,
 } from '../types/auth'
 import type { ApiResponse } from '../../../shared/types/api'
-import { api } from '../../../lib/api.ts'
+import { api } from '../../../lib/api'
 
 export const authService = {
     async login(payload: LoginRequest): Promise<AuthTokenResponse> {
         const response = await api.post<ApiResponse<AuthTokenResponse>>('/api/auth/login', payload)
+
         if (!response.data.success || !response.data.data) {
             throw new Error(response.data.message || 'Login failed')
         }
+
         return response.data.data
     },
 
     async refresh(payload: RefreshTokenRequest): Promise<AuthTokenResponse> {
         const response = await api.post<ApiResponse<AuthTokenResponse>>('/api/auth/refresh', payload)
+
         if (!response.data.success || !response.data.data) {
             throw new Error(response.data.message || 'Refresh token failed')
         }
+
         return response.data.data
     },
 
@@ -29,10 +33,12 @@ export const authService = {
     },
 
     async getMe(): Promise<AuthUser> {
-        const response = await api.get<ApiResponse<AuthUser>>('/api/auth/me')
+        const response = await api.get<ApiResponse<AuthUser>>('/api/users/me')
+
         if (!response.data.success || !response.data.data) {
             throw new Error(response.data.message || 'Get current user failed')
         }
+
         return response.data.data
-    }
+    },
 }
