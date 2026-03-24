@@ -1,6 +1,9 @@
 package com.studyspace.test.controller;
 
 import com.studyspace.common.response.ApiResponse;
+import com.studyspace.config.swagger.OpenApiConfig;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,6 +17,10 @@ import java.util.Map;
 @RequestMapping("/api/test")
 public class TestProtectedController {
 
+    @Operation(
+            summary = "Authenticated test",
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    )
     @GetMapping("/authenticated")
     public ApiResponse<Map<String, Object>> authenticated(Authentication authentication) {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -23,6 +30,10 @@ public class TestProtectedController {
         return ApiResponse.success("Authenticated access success", data, HttpStatus.OK.value());
     }
 
+    @Operation(
+            summary = "Staff test",
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    )
     @GetMapping("/staff")
     public ApiResponse<Map<String, Object>> staff(Authentication authentication) {
         Map<String, Object> data = new LinkedHashMap<>();
@@ -32,6 +43,10 @@ public class TestProtectedController {
         return ApiResponse.success("Staff access success", data, HttpStatus.OK.value());
     }
 
+    @Operation(
+            summary = "Admin test",
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    )
     @GetMapping("/admin")
     public ApiResponse<Map<String, Object>> admin(Authentication authentication) {
         Map<String, Object> data = new LinkedHashMap<>();

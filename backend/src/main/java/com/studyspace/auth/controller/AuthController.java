@@ -8,6 +8,9 @@ import com.studyspace.auth.dto.response.AuthTokenResponse;
 import com.studyspace.auth.dto.response.AuthUserResponse;
 import com.studyspace.auth.service.AuthService;
 import com.studyspace.common.response.ApiResponse;
+import com.studyspace.config.swagger.OpenApiConfig;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -21,6 +24,7 @@ public class AuthController {
 
     private final AuthService authService;
 
+    @Operation(summary = "Register new user")
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<AuthTokenResponse> register(@Valid @RequestBody RegisterRequest request) {
@@ -31,6 +35,7 @@ public class AuthController {
         );
     }
 
+    @Operation(summary = "Login")
     @PostMapping("/login")
     public ApiResponse<AuthTokenResponse> login(@Valid @RequestBody LoginRequest request) {
         return ApiResponse.success(
@@ -40,6 +45,7 @@ public class AuthController {
         );
     }
 
+    @Operation(summary = "Refresh access token")
     @PostMapping("/refresh")
     public ApiResponse<AuthTokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
         return ApiResponse.success(
@@ -49,6 +55,10 @@ public class AuthController {
         );
     }
 
+    @Operation(
+            summary = "Logout",
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    )
     @PostMapping("/logout")
     public ApiResponse<Void> logout(@Valid @RequestBody LogoutRequest request) {
         authService.logout(request);
@@ -59,6 +69,10 @@ public class AuthController {
         );
     }
 
+    @Operation(
+            summary = "Get current user",
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
+    )
     @GetMapping("/me")
     public ApiResponse<AuthUserResponse> me(Authentication authentication) {
         return ApiResponse.success(
