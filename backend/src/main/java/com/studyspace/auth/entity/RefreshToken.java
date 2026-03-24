@@ -1,5 +1,6 @@
 package com.studyspace.auth.entity;
 
+import com.studyspace.common.entity.BaseEntity;
 import com.studyspace.user.entity.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class RefreshToken {
+public class RefreshToken extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,10 +33,4 @@ public class RefreshToken {
     @Builder.Default
     @Column(name = "is_revoked", nullable = false)
     private Boolean isRevoked = false;
-
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at", nullable = false)
-    private LocalDateTime updatedAt;
 }

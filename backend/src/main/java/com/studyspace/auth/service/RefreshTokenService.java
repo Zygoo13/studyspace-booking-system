@@ -5,8 +5,8 @@ import com.studyspace.auth.repository.RefreshTokenRepository;
 import com.studyspace.auth.util.TokenGenerator;
 import com.studyspace.common.exception.BadRequestException;
 import com.studyspace.user.entity.User;
+import com.studyspace.config.security.JwtProperties;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,21 +17,15 @@ import java.time.LocalDateTime;
 public class RefreshTokenService {
 
     private final RefreshTokenRepository refreshTokenRepository;
-
-    @Value("${app.security.refresh-token-expiration-days:7}")
-    private long refreshTokenExpirationDays;
+    private final JwtProperties jwtProperties;
 
     @Transactional
     public RefreshToken createRefreshToken(User user) {
-        LocalDateTime now = LocalDateTime.now();
-
         RefreshToken refreshToken = RefreshToken.builder()
                 .token(TokenGenerator.generateRefreshToken())
                 .user(user)
-                .expiresAt(now.plusDays(refreshTokenExpirationDays))
+                .expiresAt(LocalDateTime.now().plusDays(jwtProperties.getRefreshTokenExpirationDays()))
                 .isRevoked(false)
-                .createdAt(now)
-                .updatedAt(now)
                 .build();
 
         return refreshTokenRepository.save(refreshToken);
@@ -40,14 +34,14 @@ public class RefreshTokenService {
     @Transactional(readOnly = true)
     public RefreshToken getValidRefreshTokenOrThrow(String token) {
         RefreshToken refreshToken = refreshTokenRepository.findByToken(token)
-                .orElseThrow(() -> new BadRequestException("Refresh token không tồn tại"));
+                .orElseThrow(() -> new BadRequestException("Refresh token does not exist"));
 
         if (Boolean.TRUE.equals(refreshToken.getIsRevoked())) {
-            throw new BadRequestException("Refresh token đã bị thu hồi");
+            throw new BadRequestException("Refresh token has been revoked");
         }
 
         if (refreshToken.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new BadRequestException("Refresh token đã hết hạn");
+            throw new BadRequestException("Refresh token has expired");
         }
 
         return refreshToken;
@@ -56,20 +50,15 @@ public class RefreshTokenService {
     @Transactional
     public void revokeToken(RefreshToken refreshToken) {
         refreshToken.setIsRevoked(true);
-        refreshToken.setUpdatedAt(LocalDateTime.now());
         refreshTokenRepository.save(refreshToken);
     }
 
     @Transactional
     public void revokeAllActiveTokensByUser(User user) {
         var tokens = refreshTokenRepository.findAllByUserAndIsRevokedFalse(user);
-        LocalDateTime now = LocalDateTime.now();
-
         for (RefreshToken token : tokens) {
             token.setIsRevoked(true);
-            token.setUpdatedAt(now);
         }
-
         refreshTokenRepository.saveAll(tokens);
     }
 }

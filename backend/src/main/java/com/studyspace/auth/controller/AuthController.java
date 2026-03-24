@@ -5,16 +5,14 @@ import com.studyspace.auth.dto.request.LogoutRequest;
 import com.studyspace.auth.dto.request.RefreshTokenRequest;
 import com.studyspace.auth.dto.request.RegisterRequest;
 import com.studyspace.auth.dto.response.AuthTokenResponse;
-import com.studyspace.auth.dto.response.AuthUserResponse;
-import com.studyspace.auth.service.AuthService;
 import com.studyspace.common.response.ApiResponse;
 import com.studyspace.config.swagger.OpenApiConfig;
+import com.studyspace.auth.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -65,19 +63,6 @@ public class AuthController {
         return ApiResponse.success(
                 "Logout successfully",
                 null,
-                HttpStatus.OK.value()
-        );
-    }
-
-    @Operation(
-            summary = "Get current user",
-            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME_NAME)
-    )
-    @GetMapping("/me")
-    public ApiResponse<AuthUserResponse> me(Authentication authentication) {
-        return ApiResponse.success(
-                "Get current user successfully",
-                authService.getCurrentUser(authentication),
                 HttpStatus.OK.value()
         );
     }

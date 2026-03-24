@@ -1,6 +1,6 @@
 package com.studyspace.user.mapper;
 
-import com.studyspace.auth.dto.response.AuthUserResponse;
+import com.studyspace.user.dto.response.AuthUserResponse;
 import com.studyspace.user.dto.response.UserResponse;
 import com.studyspace.user.entity.User;
 import org.mapstruct.Mapper;

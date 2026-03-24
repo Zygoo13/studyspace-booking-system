@@ -1,4 +1,4 @@
-package com.studyspace.auth.dto.response;
+package com.studyspace.user.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
