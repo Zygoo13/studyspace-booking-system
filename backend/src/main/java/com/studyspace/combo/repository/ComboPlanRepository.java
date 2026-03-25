@@ -15,4 +15,6 @@ public interface ComboPlanRepository extends JpaRepository<ComboPlan, Long> {
     boolean existsByNameIgnoreCase(String name);
 
     boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
+
+    List<ComboPlan> findAllByApplicableSpaceTypeAndIsActiveTrueOrderByDurationMinutesAscIdAsc(SpaceType applicableSpaceType);
 }

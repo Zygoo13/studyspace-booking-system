@@ -1,6 +1,7 @@
 package com.studyspace.space.repository;
 
 import com.studyspace.space.entity.SpaceUnit;
+import com.studyspace.space.enums.SpaceStatus;
 import com.studyspace.space.enums.SpaceType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -23,4 +24,10 @@ public interface SpaceUnitRepository extends JpaRepository<SpaceUnit, Long> {
     boolean existsByBranchIdAndParentIdAndNameIgnoreCase(Long branchId, Long parentId, String name);
 
     boolean existsByBranchIdAndParentIdAndNameIgnoreCaseAndIdNot(Long branchId, Long parentId, String name, Long id);
+
+    List<SpaceUnit> findAllBySpaceTypeAndStatusAndIsDirectlyRentableOrderByCapacityAscIdAsc(
+            SpaceType spaceType,
+            SpaceStatus status,
+            Boolean isDirectlyRentable
+    );
 }

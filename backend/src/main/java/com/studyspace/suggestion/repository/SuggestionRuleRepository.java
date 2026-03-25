@@ -1,5 +1,6 @@
 package com.studyspace.suggestion.repository;
 
+import com.studyspace.space.enums.SpaceType;
 import com.studyspace.suggestion.entity.SuggestionRule;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -10,4 +11,11 @@ public interface SuggestionRuleRepository extends JpaRepository<SuggestionRule, 
     List<SuggestionRule> findAllByIsActiveTrueOrderByPriorityDescIdAsc();
 
     List<SuggestionRule> findAllByOrderByPriorityDescIdAsc();
+
+    List<SuggestionRule> findAllByIsActiveTrueAndMinPeopleLessThanEqualAndMaxPeopleGreaterThanEqualOrderByPriorityDescIdAsc(
+            Integer minPeople,
+            Integer maxPeople
+    );
+
+    List<SuggestionRule> findAllByIsActiveTrueAndTargetSpaceTypeOrderByPriorityDescIdAsc(SpaceType targetSpaceType);
 }
