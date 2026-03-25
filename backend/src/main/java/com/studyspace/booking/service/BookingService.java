@@ -83,7 +83,7 @@ public class BookingService {
             return bookingMapper.toResponse(booking);
         }
 
-        if (booking.getStatus() == BookingStatus.COMPLETED || booking.getStatus() == BookingStatus.CHECKED_IN) {
+        if (booking.getStatus() != BookingStatus.CONFIRMED && booking.getStatus() != BookingStatus.NO_SHOW) {
             throw new BadRequestException("Only CONFIRMED or NO_SHOW booking may be cancelled");
         }
 

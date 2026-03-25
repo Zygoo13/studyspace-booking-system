@@ -14,16 +14,44 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     Optional<Booking> findByBookingCode(String bookingCode);
 
-    @EntityGraph(attributePaths = {"customerUser", "spaceUnit", "spaceUnit.parent", "spaceUnit.parent.parent", "comboPlan"})
+    @EntityGraph(attributePaths = {
+            "customerUser",
+            "spaceUnit",
+            "spaceUnit.floor",
+            "spaceUnit.parent",
+            "spaceUnit.parent.parent",
+            "comboPlan"
+    })
     List<Booking> findAllByCustomerUserIdOrderByCreatedAtDesc(Long customerUserId);
 
-    @EntityGraph(attributePaths = {"customerUser", "spaceUnit", "spaceUnit.parent", "spaceUnit.parent.parent", "comboPlan"})
+    @EntityGraph(attributePaths = {
+            "customerUser",
+            "spaceUnit",
+            "spaceUnit.floor",
+            "spaceUnit.parent",
+            "spaceUnit.parent.parent",
+            "comboPlan"
+    })
     List<Booking> findAllByContactPhoneOrderByCreatedAtDesc(String contactPhone);
 
-    @EntityGraph(attributePaths = {"customerUser", "spaceUnit", "spaceUnit.parent", "spaceUnit.parent.parent", "comboPlan"})
+    @EntityGraph(attributePaths = {
+            "customerUser",
+            "spaceUnit",
+            "spaceUnit.floor",
+            "spaceUnit.parent",
+            "spaceUnit.parent.parent",
+            "comboPlan"
+    })
     Optional<Booking> findWithDetailsById(Long id);
 
-    @EntityGraph(attributePaths = {"customerUser", "spaceUnit", "spaceUnit.parent", "spaceUnit.parent.parent", "comboPlan"})
+    @EntityGraph(attributePaths = {
+            "customerUser",
+            "spaceUnit",
+            "spaceUnit.floor",
+            "spaceUnit.parent",
+            "spaceUnit.parent.parent",
+            "comboPlan"
+    })
     List<Booking> findAllByStatusInAndScheduledStartLessThanAndScheduledEndGreaterThan(
             Collection<BookingStatus> statuses,
             LocalDateTime endExclusive,
