@@ -13,4 +13,14 @@ public interface SpaceUnitRepository extends JpaRepository<SpaceUnit, Long> {
     List<SpaceUnit> findAllByParentIdOrderByIdAsc(Long parentId);
 
     List<SpaceUnit> findAllBySpaceTypeOrderByIdAsc(SpaceType spaceType);
+
+    List<SpaceUnit> findAllByFloorIdOrderByIdAsc(Long floorId);
+
+    boolean existsByParentId(Long parentId);
+
+    boolean existsByFloorId(Long floorId);
+
+    boolean existsByBranchIdAndParentIdAndNameIgnoreCase(Long branchId, Long parentId, String name);
+
+    boolean existsByBranchIdAndParentIdAndNameIgnoreCaseAndIdNot(Long branchId, Long parentId, String name, Long id);
 }

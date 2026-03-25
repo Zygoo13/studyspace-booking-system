@@ -8,4 +8,6 @@ import java.util.List;
 public interface SuggestionRuleRepository extends JpaRepository<SuggestionRule, Long> {
 
     List<SuggestionRule> findAllByIsActiveTrueOrderByPriorityDescIdAsc();
+
+    List<SuggestionRule> findAllByOrderByPriorityDescIdAsc();
 }

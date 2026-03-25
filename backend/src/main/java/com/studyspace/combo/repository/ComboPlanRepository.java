@@ -11,4 +11,8 @@ public interface ComboPlanRepository extends JpaRepository<ComboPlan, Long> {
     List<ComboPlan> findAllByIsActiveTrueOrderByIdAsc();
 
     List<ComboPlan> findAllByApplicableSpaceTypeAndIsActiveTrueOrderByIdAsc(SpaceType applicableSpaceType);
+
+    boolean existsByNameIgnoreCase(String name);
+
+    boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);
 }
