@@ -1,20 +1,23 @@
 package com.studyspace.suggestion.service;
 
+import com.studyspace.booking.service.BookingAvailabilityService;
 import com.studyspace.combo.entity.ComboPlan;
 import com.studyspace.combo.repository.ComboPlanRepository;
 import com.studyspace.space.entity.Floor;
 import com.studyspace.space.entity.SpaceUnit;
 import com.studyspace.space.enums.SpaceStatus;
+import com.studyspace.space.enums.SpaceType;
+import com.studyspace.space.repository.SpaceUnitRepository;
 import com.studyspace.suggestion.dto.request.SuggestSpaceRequest;
 import com.studyspace.suggestion.dto.response.SuggestedComboResponse;
 import com.studyspace.suggestion.dto.response.SuggestedSpaceResponse;
 import com.studyspace.suggestion.entity.SuggestionRule;
 import com.studyspace.suggestion.repository.SuggestionRuleRepository;
-import com.studyspace.space.repository.SpaceUnitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
 
@@ -25,6 +28,7 @@ public class SpaceSuggestionService {
     private final SuggestionRuleRepository suggestionRuleRepository;
     private final SpaceUnitRepository spaceUnitRepository;
     private final ComboPlanRepository comboPlanRepository;
+    private final BookingAvailabilityService bookingAvailabilityService;
 
     @Transactional(readOnly = true)
     public List<SuggestedSpaceResponse> suggest(SuggestSpaceRequest request) {
@@ -38,8 +42,10 @@ public class SpaceSuggestionService {
             return List.of();
         }
 
+        LocalDateTime start = LocalDateTime.of(request.getBookingDate(), request.getStartTime());
+
         return matchedRules.stream()
-                .flatMap(rule -> buildSuggestionsForRule(rule, request.getPartySize()).stream())
+                .flatMap(rule -> buildSuggestionsForRule(rule, request.getPartySize(), start).stream())
                 .sorted(Comparator
                         .comparing(SuggestedSpaceResponse::getMatchedRulePriority, Comparator.reverseOrder())
                         .thenComparing(SuggestedSpaceResponse::getCapacity)
@@ -47,7 +53,11 @@ public class SpaceSuggestionService {
                 .toList();
     }
 
-    private List<SuggestedSpaceResponse> buildSuggestionsForRule(SuggestionRule rule, Integer partySize) {
+    private List<SuggestedSpaceResponse> buildSuggestionsForRule(
+            SuggestionRule rule,
+            Integer partySize,
+            LocalDateTime start
+    ) {
         List<SpaceUnit> candidates = spaceUnitRepository
                 .findAllBySpaceTypeAndStatusAndIsDirectlyRentableOrderByCapacityAscIdAsc(
                         rule.getTargetSpaceType(),
@@ -60,13 +70,17 @@ public class SpaceSuggestionService {
 
         return candidates.stream()
                 .filter(space -> matchesRule(space, rule, partySize))
-                .map(space -> toSuggestedSpace(space, rule, activeCombos))
+                .map(space -> toSuggestedSpace(space, rule, activeCombos, start))
                 .filter(item -> !item.getApplicableCombos().isEmpty())
                 .toList();
     }
 
     private boolean matchesRule(SpaceUnit space, SuggestionRule rule, Integer partySize) {
         if (space.getCapacity() < partySize) {
+            return false;
+        }
+
+        if (!bookingAvailabilityService.isOperational(space)) {
             return false;
         }
 
@@ -85,9 +99,15 @@ public class SpaceSuggestionService {
         return true;
     }
 
-    private SuggestedSpaceResponse toSuggestedSpace(SpaceUnit space, SuggestionRule rule, List<ComboPlan> activeCombos) {
+    private SuggestedSpaceResponse toSuggestedSpace(
+            SpaceUnit space,
+            SuggestionRule rule,
+            List<ComboPlan> activeCombos,
+            LocalDateTime start
+    ) {
         List<SuggestedComboResponse> combos = activeCombos.stream()
                 .filter(combo -> matchesCombo(space, combo))
+                .filter(combo -> bookingAvailabilityService.isAvailable(space, start, start.plusMinutes(combo.getDurationMinutes())))
                 .map(combo -> SuggestedComboResponse.builder()
                         .id(combo.getId())
                         .name(combo.getName())
@@ -131,12 +151,8 @@ public class SpaceSuggestionService {
     }
 
     private SpaceUnit resolveRoom(SpaceUnit space) {
-        if (space.getSpaceType() == com.studyspace.space.enums.SpaceType.ROOM) {
-            return space;
-        }
-
-        SpaceUnit current = space.getParent();
-        while (current != null && current.getSpaceType() != com.studyspace.space.enums.SpaceType.ROOM) {
+        SpaceUnit current = space;
+        while (current != null && current.getSpaceType() != SpaceType.ROOM) {
             current = current.getParent();
         }
         return current;
